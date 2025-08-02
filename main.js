@@ -222,3 +222,11 @@ function runLinter() {
   }
 
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  const checkBtn = document.getElementById("checkBtn");
+  if (checkBtn) {
+    checkBtn.addEventListener("click", runLinter);
+  }
+});
+
