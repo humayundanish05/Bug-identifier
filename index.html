@@ -64,44 +64,45 @@
       <h3>🪲 Linting Results:</h3>
       <ul id="resultsList"></ul>
     </div>
-  </div>  <script>
-    function runLinter() {
+  </div>  
+
+  <script>
+    function checkBugs() {
       const code = document.getElementById("codeInput").value;
-      const results = [];
+      const result = document.getElementById("result");
+      
+      const stack = [];
+      const opening = ['{', '(', '['];
+      const closing = ['}', ')', ']'];
+      const map = { '}': '{', ')': '(', ']': '[' };
 
-
-      // Basic Lint Checks
-      if (!code.includes("<html")) results.push("Missing <html> tag");
-      if (!code.includes("<head>")) results.push("Missing <head> section");
-      if (!code.includes("<body>")) results.push("Missing <body> section");
-      if (code.includes("border-bo")) results.push("Found typo: 'border-bo' → Did you mean 'border-bottom'?\u201d);
-      if (code.includes(";")) {
-        const lines = code.split("\n");
-        lines.forEach((line, index) => {
-          if (line.includes(";")) {
-            const trimmed = line.trim();
-            if (trimmed.endsWith(":") || trimmed.includes(";;")) {
-              results.push(`Syntax issue on line ${index + 1}: Check this line → '${line.trim()}'`);
-            }
+      for (let i = 0; i < code.length; i++) {
+        const char = code[i];
+        if (opening.includes(char)) {
+          stack.push({ char, index: i });
+        } else if (closing.includes(char)) {
+          if (stack.length === 0 || stack[stack.length - 1].char !== map[char]) {
+            result.className = "result error";
+            result.textContent = `❌ Bug: Unexpected '${char}' at position ${i}`;
+            return;
+          } else {
+            stack.pop();
           }
-        });
+        }
       }
 
-
-      const list = document.getElementById("resultsList");
-      list.innerHTML = "";
-
-
-      if (results.length === 0) {
-        list.innerHTML = "<li>✅ No major issues found!</li>";
+      if (stack.length > 0) {
+        const last = stack[stack.length - 1];
+        result.className = "result error";
+        result.textContent = `❌ Bug: Missing closing for '${last.char}' at position ${last.index}`;
       } else {
-        results.forEach(err => {
-          const li = document.createElement("li");
-          li.textContent = err;
-          list.appendChild(li);
-        });
+        result.className = "result success";
+        result.textContent = "✅ No syntax bracket issues found!";
       }
     }
   </script>
+
+  
 </body>
 </html>
+
