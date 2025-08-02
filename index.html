@@ -135,66 +135,76 @@ function runLinter() {
   }
 }
 
-    function runCssCheck(code, resultsList) {
-  const cssBlocks = code.match(/[^{]+\{[^}]*\}/g);
-  if (!cssBlocks) return;
+function runLinter() {
+  const code = document.getElementById("codeInput").value;
+  const resultsList = document.getElementById("resultsList");
+  resultsList.innerHTML = "";
 
-  const validProperties = [
-    "color", "background", "background-color", "font-size", "margin", "padding",
-    "display", "flex", "grid", "position", "top", "left", "right", "bottom",
-    "width", "height", "border", "border-radius", "box-shadow", "line-height",
-    "text-align", "justify-content", "align-items", "overflow", "visibility",
-    "opacity", "z-index", "transition", "transform", "animation", "content"
+  const cssBlocks = code.match(/[^{]+\{[^}]*\}/g) || [];
+  const knownProperties = [
+    "color", "background", "background-color", "margin", "padding", "font-size",
+    "font-family", "border", "border-radius", "width", "height", "display",
+    "justify-content", "align-items", "position", "top", "left", "right", "bottom",
+    "text-align", "gap", "overflow", "object-fit", "z-index", "box-shadow",
+    "line-height", "letter-spacing", "white-space", "flex-direction", "scroll-snap-align"
   ];
 
-  cssBlocks.forEach((block, i) => {
-    const [selector, propertiesRaw] = block.split("{");
-    const properties = propertiesRaw.replace("}", "").trim().split(";").map(p => p.trim()).filter(Boolean);
-    const seenProps = new Set();
+  const errors = [];
 
-    properties.forEach((line, index) => {
-      const parts = line.split(":");
-      if (parts.length !== 2) {
-        const li = document.createElement("li");
-        li.className = "error";
-        li.textContent = `❌ CSS Bug: Missing ':' or malformed property in block '${selector.trim()}' → "${line}"`;
-        resultsList.appendChild(li);
+  cssBlocks.forEach(block => {
+    const [selector, props] = block.split('{');
+    const cleanProps = props.replace('}', '').trim().split(';');
+
+    cleanProps.forEach((line, index) => {
+      const propLine = line.trim();
+      if (!propLine) return;
+
+      const parts = propLine.split(':');
+      if (parts.length < 2) {
+        errors.push(`❌ CSS Bug: Missing ':' or malformed property in block '${selector.trim()}' → "${propLine}"`);
         return;
       }
 
-      const prop = parts[0].trim();
-      const value = parts[1].trim();
+      const propName = parts[0].trim();
+      const propValue = parts.slice(1).join(':').trim();
 
-      // Check for missing semicolon — already handled by split
-      if (!line.endsWith(";") && index !== properties.length - 1) {
-        const li = document.createElement("li");
-        li.className = "error";
-        li.textContent = `❌ CSS Bug: Missing semicolon after '${line}' in '${selector.trim()}'`;
-        resultsList.appendChild(li);
+      if (!knownProperties.includes(propName)) {
+        errors.push(`❌ CSS Bug: Unknown property '${propName}' in '${selector.trim()}'`);
       }
 
-      // Invalid property name
-      if (!validProperties.includes(prop)) {
-        const li = document.createElement("li");
-        li.className = "error";
-        li.textContent = `❌ CSS Bug: Unknown property '${prop}' in '${selector.trim()}'`;
-        resultsList.appendChild(li);
-      }
-
-      // Duplicate property
-      if (seenProps.has(prop)) {
-        const li = document.createElement("li");
-        li.className = "error";
-        li.textContent = `❌ CSS Bug: Duplicate property '${prop}' in '${selector.trim()}'`;
-        resultsList.appendChild(li);
-      } else {
-        seenProps.add(prop);
+      if (!propLine.endsWith(';') && index < cleanProps.length - 1) {
+        errors.push(`❌ CSS Bug: Missing semicolon after '${propName}: ${propValue}' in '${selector.trim()}'`);
       }
     });
   });
-      }
+
+  // Check for unmatched braces
+  const openBraces = (code.match(/{/g) || []).length;
+  const closeBraces = (code.match(/}/g) || []).length;
+  if (openBraces > closeBraces) {
+    errors.push(`❌ CSS Bug: Missing closing '}' brace.`);
+  } else if (closeBraces > openBraces) {
+    errors.push(`❌ CSS Bug: Extra '}' brace found.`);
+  }
+
+  if (errors.length === 0) {
+    const li = document.createElement("li");
+    li.className = "success";
+    li.textContent = "✅ No CSS issues found!";
+    resultsList.appendChild(li);
+  } else {
+    errors.forEach(err => {
+      const li = document.createElement("li");
+      li.className = "error";
+      li.textContent = err;
+      resultsList.appendChild(li);
+    });
+  }
+}
+    
     
   </script>
 </body>
 </html>
+
 
