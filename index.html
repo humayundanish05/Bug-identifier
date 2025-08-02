@@ -2,229 +2,180 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Code Linter Debugger</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🧠 Pro Linter Room</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: sans-serif;
-      background: #f0f2f5;
-      padding: 20px;
+    /* === Global Reset === */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
 
-    .container {
+    /* === Body Styling === */
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #1e1e1e;
+      color: #d4d4d4;
+      padding: 20px;
+      line-height: 1.5;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    header h1 {
+      font-size: 28px;
+      color: #61dafb;
+    }
+
+    header p {
+      color: #c5c5c5;
+    }
+
+    footer {
+      margin-top: 20px;
+      text-align: center;
+      color: #888;
+      font-size: 14px;
+    }
+
+    /* === Workspace Layout === */
+    .workspace {
       display: flex;
+      flex-direction: row;
       gap: 20px;
       flex-wrap: wrap;
     }
 
-    textarea {
-      width: 100%;
-      height: 400px;
+    /* === Editor Panel === */
+    .editor {
+      flex: 1 1 50%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .editor label {
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    textarea#codeInput {
+      background-color: #252526;
+      color: #dcdcdc;
+      border: 1px solid #3c3c3c;
+      border-radius: 5px;
       padding: 10px;
-      border: 1px solid #ccc;
-      font-family: monospace;
+      font-family: 'Fira Code', monospace;
       font-size: 14px;
-      border-radius: 4px;
+      height: 400px;
+      resize: vertical;
     }
 
-    .code-panel {
-      flex: 1 1 400px;
-    }
-
-    .results-panel {
-      flex: 1 1 400px;
-      background: white;
-      border: 1px solid #ccc;
-      padding: 10px;
-      border-radius: 4px;
-      overflow-y: auto;
-      min-height: 400px;
-    }
-
-    button {
-      margin-top: 10px;
-      padding: 8px 16px;
-      background: #1877f2;
+    /* === Button === */
+    #checkBtn {
+      margin-top: 12px;
+      padding: 10px 16px;
+      background-color: #0e639c;
       color: white;
       border: none;
       border-radius: 4px;
+      font-weight: 600;
       cursor: pointer;
+      transition: background 0.2s;
+      align-self: flex-start;
     }
 
-    ul {
-      margin-top: 10px;
-      padding-left: 20px;
+    #checkBtn:hover {
+      background-color: #1177bb;
+    }
+
+    /* === Results Panel === */
+    .results {
+      flex: 1 1 50%;
+      background-color: #252526;
+      border: 1px solid #3c3c3c;
+      border-radius: 5px;
+      padding: 16px;
+      min-height: 400px;
+      overflow-y: auto;
+    }
+
+    .results h2 {
+      margin-bottom: 10px;
+      color: #c586c0;
+    }
+
+    /* === List Styling === */
+    ul#resultsList {
+      list-style: none;
+      padding-left: 0;
     }
 
     li {
+      font-family: 'Fira Code', monospace;
       margin-bottom: 6px;
-      font-family: monospace;
     }
 
-    .error {
-      color: red;
+    li.error {
+      color: #f44747;
     }
 
-    .success {
-      color: green;
+    li.success {
+      color: #89ca78;
+    }
+
+    /* === Optional Light Mode Support === */
+    body.light-mode {
+      background-color: #ffffff;
+      color: #333;
+    }
+
+    body.light-mode textarea#codeInput,
+    body.light-mode .results {
+      background-color: #f4f4f4;
+      color: #222;
+      border-color: #ccc;
+    }
+
+    body.light-mode #checkBtn {
+      background-color: #007acc;
+    }
+
+    body.light-mode #checkBtn:hover {
+      background-color: #0099ff;
+    }
+
+    body.light-mode .results h2 {
+      color: #007acc;
     }
   </style>
 </head>
 <body>
-  <h2>🧪 Code Bug Identifier (HTML + CSS)</h2>
-  <div class="container">
-    <div class="code-panel">
-      <label><strong>HTML / CSS Code:</strong></label>
-      <textarea id="codeInput" placeholder="Paste your code here..."></textarea>
-      <button onclick="runLinter()">Check Bugs</button>
-    </div>
+  <header>
+    <h1>🧠 Code Linter Room</h1>
+    <p>Smart HTML + CSS Bug Detection</p>
+  </header>
 
-    <div class="results-panel">
-      <h3>🪲 Linting Results:</h3>
+  <main class="workspace">
+    <section class="editor">
+      <label for="codeInput">Paste Your HTML/CSS Code</label>
+      <textarea id="codeInput" placeholder="<!DOCTYPE html>\n<html>\n  <head>..."></textarea>
+      <button id="checkBtn">🔍 Check for Bugs</button>
+    </section>
+
+    <section class="results">
+      <h2>🔧 Linter Output</h2>
       <ul id="resultsList"></ul>
-    </div>
-  </div>
+    </section>
+  </main>
 
-  <script>
- function runLinter() { const code = document.getElementById("codeInput").value; const resultsList = document.getElementById("resultsList"); resultsList.innerHTML = "";
+  <footer>
+    <p>🛠 Built by DevTools Lab</p>
+  </footer>
 
-const selfClosingTags = ['br', 'hr', 'img', 'input', 'meta', 'link', 'source', 'track', 'wbr']; const deprecatedTags = ['font', 'center', 'big', 'marquee']; const knownTags = ['html', 'head', 'body', 'div', 'span', 'h1','h2','h3','h4','h5','h6','p','a','ul','ol','li','table','tr','td','th','thead','tbody','footer','header','section','article','aside','nav','button','input','form','label','img','meta','link','script','style','title','br','hr','strong','em','b','i','u','small','figure','figcaption'];
-
-const tagRegex = /<\s*/??\s*([a-zA-Z0-9-]+)([^>])>/g; const attrRegex = /\s+([a-zA-Z-]+)(\s=\s*("[^"]"|'[^']'|[^\s>]+))?/g;
-
-const stack = []; const usedIds = new Set(); let match; let hasErrors = false;
-
-while ((match = tagRegex.exec(code)) !== null) { const fullTag = match[0]; const tagName = match[1].toLowerCase(); const attrs = match[2]; const isClosing = fullTag.startsWith("</"); const isSelfClosing = selfClosingTags.includes(tagName) || fullTag.endsWith("/>");
-
-if (!knownTags.includes(tagName) && !isClosing) {
-  const li = document.createElement("li");
-  li.className = "error";
-  li.textContent = `❌ HTML Bug: Unknown tag <${tagName}> at position ${match.index}`;
-  resultsList.appendChild(li);
-  hasErrors = true;
-}
-
-if (deprecatedTags.includes(tagName)) {
-  const li = document.createElement("li");
-  li.className = "error";
-  li.textContent = `⚠️ HTML Warning: Deprecated tag <${tagName}> used`;
-  resultsList.appendChild(li);
-}
-
-let attrMatch;
-while ((attrMatch = attrRegex.exec(attrs)) !== null) {
-  const attrName = attrMatch[1].toLowerCase();
-  const attrValue = attrMatch[3];
-
-  if (attrName === "id" && attrValue) {
-    const idValue = attrValue.replace(/['"]/g, '');
-    if (usedIds.has(idValue)) {
-      const li = document.createElement("li");
-      li.className = "error";
-      li.textContent = `❌ HTML Bug: Duplicate id="${idValue}" found`;
-      resultsList.appendChild(li);
-      hasErrors = true;
-    } else {
-      usedIds.add(idValue);
-    }
-  }
-
-  if (tagName === "img" && attrName === "alt" && attrValue === '""') {
-    const li = document.createElement("li");
-    li.className = "error";
-    li.textContent = `⚠️ HTML Warning: <img> has empty alt attribute`;
-    resultsList.appendChild(li);
-  }
-
-  if (!attrMatch[2] && attrName !== "disabled" && attrName !== "checked") {
-    const li = document.createElement("li");
-    li.className = "error";
-    li.textContent = `❌ HTML Bug: Attribute "${attrName}" missing value in tag <${tagName}>`;
-    resultsList.appendChild(li);
-    hasErrors = true;
-  }
-}
-
-if (isClosing) {
-  if (!stack.length || stack[stack.length - 1] !== tagName) {
-    const li = document.createElement("li");
-    li.className = "error";
-    li.textContent = `❌ HTML Bug: Unexpected closing </${tagName}> at position ${match.index}`;
-    resultsList.appendChild(li);
-    hasErrors = true;
-  } else {
-    stack.pop();
-  }
-} else if (!isSelfClosing) {
-  stack.push(tagName);
-}
-
-}
-
-if (stack.length > 0) { stack.forEach(unclosed => { const li = document.createElement("li"); li.className = "error"; li.textContent = ❌ HTML Bug: Missing closing tag for <${unclosed}>; resultsList.appendChild(li); }); hasErrors = true; }
-
-const cssBlocks = code.split(/}/); const knownCSSProperties = [ "color", "background", "font-size", "margin", "padding", "border", "display", "position", "top", "left", "right", "bottom", "width", "height", "overflow", "z-index", "border-radius", "text-align", "box-sizing", "gap", "align-items", "justify-content", "object-fit", "border-bottom", "border-top", "border-left", "border-right", "font-weight", "line-height", "white-space", "scroll-snap-type", "scroll-snap-align", "flex-direction", "flex", "min-width", "max-width", "min-height", "max-height" ];
-
-cssBlocks.forEach((block) => { if (!block.includes("{")) return; const [selector, propertiesRaw] = block.split("{"); const properties = propertiesRaw.trim().split("\n");
-
-if (!block.includes("}")) {
-  const li = document.createElement("li");
-  li.className = "error";
-  li.textContent = `❌ CSS Bug: Missing closing '}' brace after selector '${selector.trim()}'`;
-  resultsList.appendChild(li);
-}
-
-properties.forEach((line) => {
-  const trimmedLine = line.trim();
-  if (!trimmedLine) return;
-
-  if (!trimmedLine.includes(":")) {
-    const li = document.createElement("li");
-    li.className = "error";
-    li.textContent = `❌ CSS Bug: Missing ':' or malformed property in block '${selector.trim()}' → "${trimmedLine}"`;
-    resultsList.appendChild(li);
-    return;
-  }
-
-  const hasSemicolon = trimmedLine.endsWith(";");
-  const [prop, value] = trimmedLine.replace(";", "").split(":").map(s => s.trim());
-
-  if (!knownCSSProperties.includes(prop)) {
-    const li = document.createElement("li");
-    li.className = "error";
-    li.textContent = `❌ CSS Bug: Unknown property '${prop}' in '${selector.trim()}'`;
-    resultsList.appendChild(li);
-  }
-
-  if (!hasSemicolon) {
-    const li = document.createElement("li");
-    li.className = "error";
-    li.textContent = `❌ CSS Bug: Missing semicolon after '${prop}: ${value}' in '${selector.trim()}'`;
-    resultsList.appendChild(li);
-  }
-});
-
-});
-
-const stackSyntax = []; const opening = ['{', '(', '[']; const closing = ['}', ')', ']']; const map = { '}': '{', ')': '(', ']': '[' };
-
-for (let i = 0; i < code.length; i++) { const char = code[i]; if (opening.includes(char)) { stackSyntax.push({ char, index: i }); } else if (closing.includes(char)) { if (stackSyntax.length === 0 || stackSyntax[stackSyntax.length - 1].char !== map[char]) { const li = document.createElement("li"); li.className = "error"; li.textContent = ❌ Syntax Bug: Unexpected '${char}' at position ${i}; resultsList.appendChild(li); return; } else { stackSyntax.pop(); } } }
-
-if (stackSyntax.length > 0) { stackSyntax.forEach(item => { const li = document.createElement("li"); li.className = "error"; li.textContent = ❌ Syntax Bug: Missing closing for '${item.char}' at position ${item.index}; resultsList.appendChild(li); }); }
-
-if (resultsList.children.length === 0) { const li = document.createElement("li"); li.className = "success"; li.textContent = "✅ No HTML or CSS bugs found!"; resultsList.appendChild(li); } }
-
-        
-
-
-  </script>
+  <script src="main.js"></script>
 </body>
 </html>
-
-
-
-
-
-
