@@ -1,4 +1,10 @@
-console.log("✅ JS file connected");
+function getLineAndColumn(code, index) {
+  const lines = code.substring(0, index).split('\n');
+  const line = lines.length;
+  const col = lines[lines.length - 1].length + 1;
+  return { line, col };
+}
+
 
 function runLinter() {
   const code = document.getElementById("codeInput").value;
@@ -37,6 +43,7 @@ function runLinter() {
     if (!knownTags.includes(tagName) && !isClosing) {
       const li = document.createElement("li");
       li.className = "error";
+      const { line, col } = getLineAndColumn(code, match.index);
       li.textContent = `❌ HTML Bug: Unknown tag <${tagName}> at position ${match.index}`;
       resultsList.appendChild(li);
       hasErrors = true;
@@ -46,6 +53,7 @@ function runLinter() {
     if (deprecatedTags.includes(tagName)) {
       const li = document.createElement("li");
       li.className = "error";
+      const { line, col } = getLineAndColumn(code, match.index);
       li.textContent = `⚠️ HTML Warning: Deprecated tag <${tagName}> used`;
       resultsList.appendChild(li);
     }
@@ -62,6 +70,7 @@ function runLinter() {
         if (usedIds.has(idValue)) {
           const li = document.createElement("li");
           li.className = "error";
+          const { line, col } = getLineAndColumn(code, match.index);
           li.textContent = `❌ HTML Bug: Duplicate id="${idValue}" found`;
           resultsList.appendChild(li);
           hasErrors = true;
@@ -74,6 +83,7 @@ function runLinter() {
       if (tagName === "img" && attrName === "alt" && attrValue === '""') {
         const li = document.createElement("li");
         li.className = "error";
+        const { line, col } = getLineAndColumn(code, match.index);
         li.textContent = `⚠️ HTML Warning: <img> has empty alt attribute`;
         resultsList.appendChild(li);
       }
@@ -82,6 +92,7 @@ function runLinter() {
       if (!attrMatch[2] && attrName !== "disabled" && attrName !== "checked") {
         const li = document.createElement("li");
         li.className = "error";
+        const { line, col } = getLineAndColumn(code, match.index);
         li.textContent = `❌ HTML Bug: Attribute "${attrName}" missing value in tag <${tagName}>`;
         resultsList.appendChild(li);
         hasErrors = true;
@@ -93,6 +104,7 @@ function runLinter() {
       if (!stack.length || stack[stack.length - 1] !== tagName) {
         const li = document.createElement("li");
         li.className = "error";
+        const { line, col } = getLineAndColumn(code, match.index);
         li.textContent = `❌ HTML Bug: Unexpected closing </${tagName}> at position ${match.index}`;
         resultsList.appendChild(li);
         hasErrors = true;
@@ -109,6 +121,7 @@ function runLinter() {
     stack.forEach(unclosed => {
       const li = document.createElement("li");
       li.className = "error";
+      const { line, col } = getLineAndColumn(code, match.index);
       li.textContent = `❌ HTML Bug: Missing closing tag for <${unclosed}>`;
       resultsList.appendChild(li);
     });
@@ -138,6 +151,7 @@ function runLinter() {
     if (!block.includes("}")) {
       const li = document.createElement("li");
       li.className = "error";
+      const { line, col } = getLineAndColumn(code, match.index);
       li.textContent = `❌ CSS Bug: Missing closing '}' brace after selector '${selector.trim()}'`;
       resultsList.appendChild(li);
     }
@@ -151,6 +165,7 @@ function runLinter() {
       if (!trimmedLine.includes(":")) {
         const li = document.createElement("li");
         li.className = "error";
+        const { line, col } = getLineAndColumn(code, match.index);
         li.textContent = `❌ CSS Bug: Missing ':' or malformed property in block '${selector.trim()}' → "${trimmedLine}"`;
         resultsList.appendChild(li);
         return;
@@ -164,6 +179,7 @@ function runLinter() {
       if (!knownCSSProperties.includes(prop)) {
         const li = document.createElement("li");
         li.className = "error";
+        const { line, col } = getLineAndColumn(code, match.index);
         li.textContent = `❌ CSS Bug: Unknown property '${prop}' in '${selector.trim()}'`;
         resultsList.appendChild(li);
       }
@@ -172,6 +188,7 @@ function runLinter() {
       if (!hasSemicolon) {
         const li = document.createElement("li");
         li.className = "error";
+        const { line, col } = getLineAndColumn(code, match.index);
         li.textContent = `❌ CSS Bug: Missing semicolon after '${prop}: ${value}' in '${selector.trim()}'`;
         resultsList.appendChild(li);
       }
@@ -194,6 +211,7 @@ function runLinter() {
       if (stackSyntax.length === 0 || stackSyntax[stackSyntax.length - 1].char !== map[char]) {
         const li = document.createElement("li");
         li.className = "error";
+        const { line, col } = getLineAndColumn(code, match.index);
         li.textContent = `❌ Syntax Bug: Unexpected '${char}' at position ${i}`;
         resultsList.appendChild(li);
         return;
@@ -208,6 +226,7 @@ function runLinter() {
     stackSyntax.forEach(item => {
       const li = document.createElement("li");
       li.className = "error";
+      const { line, col } = getLineAndColumn(code, match.index);
       li.textContent = `❌ Syntax Bug: Missing closing for '${item.char}' at position ${item.index}`;
       resultsList.appendChild(li);
     });
@@ -229,4 +248,5 @@ document.addEventListener("DOMContentLoaded", () => {
     checkBtn.addEventListener("click", runLinter);
   }
 });
+
 
