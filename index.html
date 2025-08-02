@@ -88,47 +88,113 @@
   </div>
 
   <script>
-    function runLinter() {
-      const code = document.getElementById("codeInput").value;
-      const resultsList = document.getElementById("resultsList");
-      resultsList.innerHTML = ""; // clear previous results
 
-      const stack = [];
-      const opening = ['{', '(', '['];
-      const closing = ['}', ')', ']'];
-      const map = { '}': '{', ')': '(', ']': '[' };
+function runLinter() {
+  const code = document.getElementById("codeInput").value;
+  const resultsList = document.getElementById("resultsList");
+  resultsList.innerHTML = ""; // clear previous results
 
-      for (let i = 0; i < code.length; i++) {
-        const char = code[i];
-        if (opening.includes(char)) {
-          stack.push({ char, index: i });
-        } else if (closing.includes(char)) {
-          if (stack.length === 0 || stack[stack.length - 1].char !== map[char]) {
-            const li = document.createElement("li");
-            li.className = "error";
-            li.textContent = `❌ Bug: Unexpected '${char}' at position ${i}`;
-            resultsList.appendChild(li);
-            return;
-          } else {
-            stack.pop();
-          }
-        }
+  const htmlTagRegex = /<\/?([a-zA-Z0-9\-]+)[^>]*>/g;
+  const selfClosingTags = ['br', 'hr', 'img', 'input', 'meta', 'link', 'source', 'track', 'wbr'];
+  const stack = [];
+  let match;
+  let hasErrors = false;
+
+  while ((match = htmlTagRegex.exec(code)) !== null) {
+    const tag = match[1].toLowerCase();
+    const isClosing = match[0].startsWith("</");
+
+    if (isClosing) {
+      if (!stack.length || stack[stack.length - 1] !== tag) {
+        const li = document.createElement("li");
+        li.className = "error";
+        li.textContent = `❌ HTML Bug: Unexpected closing </${tag}> at position ${match.index}`;
+        resultsList.appendChild(li);
+        hasErrors = true;
+      } else {
+        stack.pop();
+      }
+    } else if (!selfClosingTags.includes(tag)) {
+      stack.push(tag);
+    }
+  }
+
+  if (stack.length > 0) {
+    stack.forEach(unclosed => {
+      const li = document.createElement("li");
+      li.className = "error";
+      li.textContent = `❌ HTML Bug: Missing closing tag for <${unclosed}>`;
+      resultsList.appendChild(li);
+    });
+    hasErrors = true;
+  }
+
+  // If no HTML tag errors, continue to CSS checks (in next part)
+  if (!hasErrors) {
+    runCssCheck(code, resultsList);
+  }
+}
+
+    function runCssCheck(code, resultsList) {
+  const cssBlocks = code.match(/[^{]+\{[^}]*\}/g);
+  if (!cssBlocks) return;
+
+  const validProperties = [
+    "color", "background", "background-color", "font-size", "margin", "padding",
+    "display", "flex", "grid", "position", "top", "left", "right", "bottom",
+    "width", "height", "border", "border-radius", "box-shadow", "line-height",
+    "text-align", "justify-content", "align-items", "overflow", "visibility",
+    "opacity", "z-index", "transition", "transform", "animation", "content"
+  ];
+
+  cssBlocks.forEach((block, i) => {
+    const [selector, propertiesRaw] = block.split("{");
+    const properties = propertiesRaw.replace("}", "").trim().split(";").map(p => p.trim()).filter(Boolean);
+    const seenProps = new Set();
+
+    properties.forEach((line, index) => {
+      const parts = line.split(":");
+      if (parts.length !== 2) {
+        const li = document.createElement("li");
+        li.className = "error";
+        li.textContent = `❌ CSS Bug: Missing ':' or malformed property in block '${selector.trim()}' → "${line}"`;
+        resultsList.appendChild(li);
+        return;
       }
 
-      if (stack.length > 0) {
-        stack.forEach(item => {
-          const li = document.createElement("li");
-          li.className = "error";
-          li.textContent = `❌ Bug: Missing closing for '${item.char}' at position ${item.index}`;
-          resultsList.appendChild(li);
-        });
-      } else {
+      const prop = parts[0].trim();
+      const value = parts[1].trim();
+
+      // Check for missing semicolon — already handled by split
+      if (!line.endsWith(";") && index !== properties.length - 1) {
         const li = document.createElement("li");
-        li.className = "success";
-        li.textContent = "✅ No syntax bracket issues found!";
+        li.className = "error";
+        li.textContent = `❌ CSS Bug: Missing semicolon after '${line}' in '${selector.trim()}'`;
         resultsList.appendChild(li);
       }
-    }
+
+      // Invalid property name
+      if (!validProperties.includes(prop)) {
+        const li = document.createElement("li");
+        li.className = "error";
+        li.textContent = `❌ CSS Bug: Unknown property '${prop}' in '${selector.trim()}'`;
+        resultsList.appendChild(li);
+      }
+
+      // Duplicate property
+      if (seenProps.has(prop)) {
+        const li = document.createElement("li");
+        li.className = "error";
+        li.textContent = `❌ CSS Bug: Duplicate property '${prop}' in '${selector.trim()}'`;
+        resultsList.appendChild(li);
+      } else {
+        seenProps.add(prop);
+      }
+    });
+  });
+      }
+    
   </script>
 </body>
 </html>
+
