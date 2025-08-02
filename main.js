@@ -1,97 +1,130 @@
 console.log("✅ JS file connected");
 
 // Utility: Get line and column from character index
-function getLineAndColumn(code, index) { const lines = code.substring(0, index).split("\n"); const line = lines.length; const col = lines[lines.length - 1].length + 1; return { line, col }; }
-
-function runLinter() { const code = document.getElementById("codeInput").value; const resultsList = document.getElementById("resultsList"); resultsList.innerHTML = "";
-
-const selfClosingTags = ['br', 'hr', 'img', 'input', 'meta', 'link', 'source', 'track', 'wbr']; const deprecatedTags = ['font', 'center', 'big', 'marquee']; const knownTags = [ 'html', 'head', 'body', 'div', 'span', 'h1','h2','h3','h4','h5','h6','p','a', 'ul','ol','li','table','tr','td','th','thead','tbody','footer','header','section', 'article','aside','nav','button','input','form','label','img','meta','link', 'script','style','title','br','hr','strong','em','b','i','u','small','figure','figcaption' ];
-
-const tagRegex = /<\s*/??\s*([a-zA-Z0-9-]+)([^>])>/g; const attrRegex = /\s+([a-zA-Z-]+)(\s=\s*("[^"]"|'[^']'|[^\s>]+))?/g;
-
-const stack = []; const usedIds = new Set(); const errorLines = new Set(); let match; let hasErrors = false;
-
-while ((match = tagRegex.exec(code)) !== null) { const fullTag = match[0]; const tagName = match[1].toLowerCase(); const attrs = match[2]; const isClosing = fullTag.startsWith("</"); const isSelfClosing = selfClosingTags.includes(tagName) || fullTag.endsWith("/>"); const { line, col } = getLineAndColumn(code, match.index);
-
-if (!knownTags.includes(tagName) && !isClosing) {
-  const li = document.createElement("li");
-  li.className = "error";
-  li.textContent = `❌ HTML Bug: Unknown tag <${tagName}> at line ${line}, column ${col}`;
-  resultsList.appendChild(li);
-  errorLines.add(line);
-  hasErrors = true;
+function getLineAndColumn(code, index) {
+  const lines = code.substring(0, index).split("\n");
+  const line = lines.length;
+  const col = lines[lines.length - 1].length + 1;
+  return { line, col };
 }
 
-if (deprecatedTags.includes(tagName)) {
-  const li = document.createElement("li");
-  li.className = "error";
-  li.textContent = `⚠️ HTML Warning: Deprecated tag <${tagName}> used at line ${line}, column ${col}`;
-  resultsList.appendChild(li);
-  errorLines.add(line);
-}
+function runLinter() {
+  const code = document.getElementById("codeInput").value;
+  const resultsList = document.getElementById("resultsList");
+  resultsList.innerHTML = "";
 
-let attrMatch;
-while ((attrMatch = attrRegex.exec(attrs)) !== null) {
-  const attrName = attrMatch[1].toLowerCase();
-  const attrValue = attrMatch[3];
+  const selfClosingTags = ['br', 'hr', 'img', 'input', 'meta', 'link', 'source', 'track', 'wbr'];
+  const deprecatedTags = ['font', 'center', 'big', 'marquee'];
+  const knownTags = [
+    'html', 'head', 'body', 'div', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'a',
+    'ul', 'ol', 'li', 'table', 'tr', 'td', 'th', 'thead', 'tbody', 'footer', 'header', 'section',
+    'article', 'aside', 'nav', 'button', 'input', 'form', 'label', 'img', 'meta', 'link',
+    'script', 'style', 'title', 'br', 'hr', 'strong', 'em', 'b', 'i', 'u', 'small', 'figure', 'figcaption'
+  ];
 
-  if (attrName === "id" && attrValue) {
-    const idValue = attrValue.replace(/['"]/g, '');
-    if (usedIds.has(idValue)) {
+  const tagRegex = /<\s*\/?\s*([a-zA-Z0-9\-]+)([^>]*)>/g;
+  const attrRegex = /\s+([a-zA-Z\-]+)(\s*=\s*("[^"]*"|'[^']*'|[^\s>]+))?/g;
+
+  const stack = [];
+  const usedIds = new Set();
+  const errorLines = new Set();
+  let match;
+  let hasErrors = false;
+
+  while ((match = tagRegex.exec(code)) !== null) {
+    const fullTag = match[0];
+    const tagName = match[1].toLowerCase();
+    const attrs = match[2];
+    const isClosing = fullTag.startsWith("</");
+    const isSelfClosing = selfClosingTags.includes(tagName) || fullTag.endsWith("/>");
+    const { line, col } = getLineAndColumn(code, match.index);
+
+    if (!knownTags.includes(tagName) && !isClosing) {
       const li = document.createElement("li");
       li.className = "error";
-      li.textContent = `❌ HTML Bug: Duplicate id="${idValue}" found at line ${line}, column ${col}`;
+      li.textContent = `❌ HTML Bug: Unknown tag <${tagName}> at line ${line}, column ${col}`;
       resultsList.appendChild(li);
       errorLines.add(line);
       hasErrors = true;
-    } else {
-      usedIds.add(idValue);
+    }
+
+    if (deprecatedTags.includes(tagName)) {
+      const li = document.createElement("li");
+      li.className = "error";
+      li.textContent = `⚠️ HTML Warning: Deprecated tag <${tagName}> used at line ${line}, column ${col}`;
+      resultsList.appendChild(li);
+      errorLines.add(line);
+    }
+
+    let attrMatch;
+    while ((attrMatch = attrRegex.exec(attrs)) !== null) {
+      const attrName = attrMatch[1].toLowerCase();
+      const attrValue = attrMatch[3];
+
+      if (attrName === "id" && attrValue) {
+        const idValue = attrValue.replace(/['"]/g, '');
+        if (usedIds.has(idValue)) {
+          const li = document.createElement("li");
+          li.className = "error";
+          li.textContent = `❌ HTML Bug: Duplicate id="${idValue}" found at line ${line}, column ${col}`;
+          resultsList.appendChild(li);
+          errorLines.add(line);
+          hasErrors = true;
+        } else {
+          usedIds.add(idValue);
+        }
+      }
+
+      if (tagName === "img" && attrName === "alt" && attrValue === '""') {
+        const li = document.createElement("li");
+        li.className = "error";
+        li.textContent = `⚠️ HTML Warning: <img> has empty alt attribute at line ${line}, column ${col}`;
+        resultsList.appendChild(li);
+        errorLines.add(line);
+      }
+
+      if (!attrMatch[2] && attrName !== "disabled" && attrName !== "checked") {
+        const li = document.createElement("li");
+        li.className = "error";
+        li.textContent = `❌ HTML Bug: Attribute "${attrName}" missing value in tag <${tagName}> at line ${line}, column ${col}`;
+        resultsList.appendChild(li);
+        errorLines.add(line);
+        hasErrors = true;
+      }
+    }
+
+    if (isClosing) {
+      if (!stack.length || stack[stack.length - 1] !== tagName) {
+        const li = document.createElement("li");
+        li.className = "error";
+        li.textContent = `❌ HTML Bug: Unexpected closing </${tagName}> at line ${line}, column ${col}`;
+        resultsList.appendChild(li);
+        errorLines.add(line);
+        hasErrors = true;
+      } else {
+        stack.pop();
+      }
+    } else if (!isSelfClosing) {
+      stack.push(tagName);
     }
   }
 
-  if (tagName === "img" && attrName === "alt" && attrValue === '""') {
-    const li = document.createElement("li");
-    li.className = "error";
-    li.textContent = `⚠️ HTML Warning: <img> has empty alt attribute at line ${line}, column ${col}`;
-    resultsList.appendChild(li);
-    errorLines.add(line);
-  }
-
-  if (!attrMatch[2] && attrName !== "disabled" && attrName !== "checked") {
-    const li = document.createElement("li");
-    li.className = "error";
-    li.textContent = `❌ HTML Bug: Attribute "${attrName}" missing value in tag <${tagName}> at line ${line}, column ${col}`;
-    resultsList.appendChild(li);
-    errorLines.add(line);
+  if (stack.length > 0) {
+    stack.forEach(unclosed => {
+      const li = document.createElement("li");
+      li.className = "error";
+      li.textContent = `❌ HTML Bug: Missing closing tag for <${unclosed}>`;
+      resultsList.appendChild(li);
+    });
     hasErrors = true;
   }
+
+  // Highlight error lines
+  highlightLinesWithErrors(errorLines);
 }
 
-if (isClosing) {
-  if (!stack.length || stack[stack.length - 1] !== tagName) {
-    const li = document.createElement("li");
-    li.className = "error";
-    li.textContent = `❌ HTML Bug: Unexpected closing </${tagName}> at line ${line}, column ${col}`;
-    resultsList.appendChild(li);
-    errorLines.add(line);
-    hasErrors = true;
-  } else {
-    stack.pop();
-  }
-} else if (!isSelfClosing) {
-  stack.push(tagName);
-}
-
-}
-
-if (stack.length > 0) { stack.forEach(unclosed => { const li = document.createElement("li"); li.className = "error"; li.textContent = ❌ HTML Bug: Missing closing tag for <${unclosed}>; resultsList.appendChild(li); }); hasErrors = true; }
-
-// Call highlight function with collected error lines 
-  highlightLinesWithErrors(errorLines); }
-
-                      
+                     
     
-
 // === CSS Validation ===
   const cssBlocks = code.split(/}/);
   const knownCSSProperties = [
@@ -230,3 +263,4 @@ document.addEventListener("DOMContentLoaded", () => {
     highlight.scrollLeft = textarea.scrollLeft;
   });
 });
+
