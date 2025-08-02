@@ -152,57 +152,58 @@
       color: #007acc;
     }
 
-
     .editor-panel {
-  flex: 1 1 50%;
-  display: flex;
-  flex-direction: column;
-}
+      flex: 1 1 50%;
+      display: flex;
+      flex-direction: column;
+    }
 
-.code-wrapper {
-  position: relative;
-  width: 100%;
-}
+    .code-wrapper {
+      position: relative;
+      width: 100%;
+    }
 
-#codeInput, #codeHighlight {
-  font-family: 'Fira Code', monospace;
-  font-size: 14px;
-  line-height: 1.5;
-  white-space: pre-wrap;
-  padding: 10px;
-  border-radius: 5px;
-  width: 100%;
-  height: 400px;
-  background-color: #252526;
-  color: #dcdcdc;
-  border: 1px solid #3c3c3c;
-  overflow: auto;
-}
+    #codeInput, #codeHighlight {
+      font-family: 'Fira Code', monospace;
+      font-size: 14px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      padding: 10px;
+      border-radius: 5px;
+      width: 100%;
+      height: 400px;
+      background-color: #252526;
+      color: #dcdcdc;
+      border: 1px solid #3c3c3c;
+      overflow: auto;
+    }
 
-#codeInput {
-  position: absolute;
-  top: 0;
-  left: 0;
-  background: transparent;
-  color: transparent;
-  caret-color: white;
-  z-index: 2;
-  resize: none;
-}
+    #codeInput {
+      position: absolute;
+      top: 0;
+      left: 0;
+      background: transparent;
+      color: transparent;
+      caret-color: white;
+      z-index: 2;
+      resize: none;
+    }
 
-#codeHighlight {
-  position: relative;
-  z-index: 1;
-  pointer-events: none;
-  color: #dcdcdc;
-}
+    #codeHighlight {
+      position: relative;
+      z-index: 1;
+      pointer-events: none;
+      color: #dcdcdc;
+    }
 
-/* Highlighted lines */
-.highlight-line {
-  display: block;
-  width: 100%;
-  background-color: rgba(255, 0, 0, 0.1);
-}
+    /* Highlighted lines */
+    .highlight-line {
+      display: block;
+      width: 100%;
+      background-color: rgba(255, 0, 0, 0.1);
+      border-left: 3px solid red;
+      padding-left: 4px;
+    }
   </style>
 </head>
 
@@ -217,8 +218,10 @@
       <label for="codeInput">Paste Your HTML/CSS Code</label>
 
       <div class="code-wrapper">
-        <pre id="codeHighlight"></pre>
-        <textarea id="codeInput" placeholder="<!DOCTYPE html>\n<html>\n  <head>..."></textarea>
+        <div id="codeHighlight"></div>
+        <textarea id="codeInput" placeholder="<!DOCTYPE html>
+<html>
+  <head>..."></textarea>
       </div>
 
       <button id="checkBtn">🔍 Check for Bugs</button>
@@ -236,8 +239,4 @@
 
   <script src="main.js"></script>
 </body>
-  
 </html>
-
-
-
