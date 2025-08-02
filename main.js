@@ -22,14 +22,15 @@ function runLinter() {
     'script','style','title','br','hr','strong','em','b','i','u','small','figure','figcaption'
   ];
 
-  const tagRegex = /<\s*\/?\s*([a-zA-Z0-9\-]+)([^>]*)>/g;
-  const attrRegex = /\s+([a-zA-Z\-]+)(\s*=\s*("[^"]*"|'[^']*'|[^\s>]+))?/g;
+  const tagRegex = /<\/?([a-zA-Z0-9-]+)([^>]*)>/g;
+  const attrRegex = /\s+([a-zA-Z-]+)(\s*=\s*("[^"]*"|'[^']*'|[^\s>]+))?/g;
 
   const stack = [];
   const usedIds = new Set();
   const errorLines = new Set();
   let match;
   let hasErrors = false;
+  let fixedCode = code;
 
   while ((match = tagRegex.exec(code)) !== null) {
     const fullTag = match[0];
@@ -119,7 +120,9 @@ function runLinter() {
     hasErrors = true;
   }
 
-  // === CSS Validation ===
+  highlightLinesWithErrors(errorLines);
+
+// === CSS Validation ===
   const cssBlocks = code.split(/}/);
   const knownCSSProperties = [
     "color", "background", "font-size", "margin", "padding", "border", "display",
@@ -143,6 +146,8 @@ function runLinter() {
       li.className = "error";
       li.textContent = `❌ CSS Bug: Missing closing '}' after selector '${selector.trim()}' at line ${line}, column ${col}`;
       resultsList.appendChild(li);
+      errorLines.add(line);
+      hasErrors = true;
     }
 
     properties.forEach((lineText) => {
@@ -157,6 +162,8 @@ function runLinter() {
         li.className = "error";
         li.textContent = `❌ CSS Bug: Missing ':' or malformed property in '${selector.trim()}' → "${trimmedLine}" at line ${propLine}, column ${propCol}`;
         resultsList.appendChild(li);
+        errorLines.add(propLine);
+        hasErrors = true;
         return;
       }
 
@@ -168,6 +175,8 @@ function runLinter() {
         li.className = "error";
         li.textContent = `❌ CSS Bug: Unknown property '${prop}' in '${selector.trim()}' at line ${propLine}, column ${propCol}`;
         resultsList.appendChild(li);
+        errorLines.add(propLine);
+        hasErrors = true;
       }
 
       if (!hasSemicolon) {
@@ -175,6 +184,8 @@ function runLinter() {
         li.className = "error";
         li.textContent = `❌ CSS Bug: Missing semicolon after '${prop}: ${value}' in '${selector.trim()}' at line ${propLine}, column ${propCol}`;
         resultsList.appendChild(li);
+        errorLines.add(propLine);
+        hasErrors = true;
       }
     });
   });
@@ -196,7 +207,8 @@ function runLinter() {
         li.className = "error";
         li.textContent = `❌ Syntax Bug: Unexpected '${char}' at line ${line}, column ${col}`;
         resultsList.appendChild(li);
-        return;
+        errorLines.add(line);
+        hasErrors = true;
       } else {
         stackSyntax.pop();
       }
@@ -210,18 +222,18 @@ function runLinter() {
       li.className = "error";
       li.textContent = `❌ Syntax Bug: Missing closing for '${item.char}' at line ${line}, column ${col}`;
       resultsList.appendChild(li);
+      errorLines.add(line);
+      hasErrors = true;
     });
   }
 
-  // ✅ Success message
-  if (resultsList.children.length === 0) {
+  if (!hasErrors) {
     const li = document.createElement("li");
     li.className = "success";
     li.textContent = "✅ No HTML or CSS bugs found!";
     resultsList.appendChild(li);
   }
 
-  // Call highlight function
   highlightLinesWithErrors(errorLines);
 }
 
@@ -233,7 +245,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// Highlight lines with errors
+// 🔍 Highlight lines with errors
 function highlightLinesWithErrors(lines) {
   const code = document.getElementById("codeInput").value;
   const highlight = document.getElementById("codeHighlight");
@@ -249,7 +261,7 @@ function highlightLinesWithErrors(lines) {
   highlight.innerHTML = html;
 }
 
-// Sync scroll between textarea and highlight
+// 🌀 Sync scroll between textarea and highlight
 document.addEventListener("DOMContentLoaded", () => {
   const textarea = document.getElementById("codeInput");
   const highlight = document.getElementById("codeHighlight");
@@ -257,5 +269,9 @@ document.addEventListener("DOMContentLoaded", () => {
   textarea.addEventListener("scroll", () => {
     highlight.scrollTop = textarea.scrollTop;
     highlight.scrollLeft = textarea.scrollLeft;
+  });
+
+  textarea.addEventListener("input", () => {
+    highlightLinesWithErrors(new Set()); // Update live while typing
   });
 });
