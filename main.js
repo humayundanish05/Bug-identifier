@@ -16,10 +16,10 @@ function runLinter() {
   const selfClosingTags = ['br', 'hr', 'img', 'input', 'meta', 'link', 'source', 'track', 'wbr'];
   const deprecatedTags = ['font', 'center', 'big', 'marquee'];
   const knownTags = [
-    'html', 'head', 'body', 'div', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'a',
-    'ul', 'ol', 'li', 'table', 'tr', 'td', 'th', 'thead', 'tbody', 'footer', 'header', 'section',
-    'article', 'aside', 'nav', 'button', 'input', 'form', 'label', 'img', 'meta', 'link',
-    'script', 'style', 'title', 'br', 'hr', 'strong', 'em', 'b', 'i', 'u', 'small', 'figure', 'figcaption'
+    'html', 'head', 'body', 'div', 'span', 'h1','h2','h3','h4','h5','h6','p','a',
+    'ul','ol','li','table','tr','td','th','thead','tbody','footer','header','section',
+    'article','aside','nav','button','input','form','label','img','meta','link',
+    'script','style','title','br','hr','strong','em','b','i','u','small','figure','figcaption'
   ];
 
   const tagRegex = /<\s*\/?\s*([a-zA-Z0-9\-]+)([^>]*)>/g;
@@ -119,113 +119,110 @@ function runLinter() {
     hasErrors = true;
   }
 
-  // Highlight error lines
-  highlightLinesWithErrors(errorLines);
-}
-
-                     
-    
-// === CSS Validation ===
   // === CSS Validation ===
-const cssBlocks = code.split(/}/);
-const knownCSSProperties = [
-  "color", "background", "font-size", "margin", "padding", "border", "display",
-  "position", "top", "left", "right", "bottom", "width", "height", "overflow",
-  "z-index", "border-radius", "text-align", "box-sizing", "gap", "align-items",
-  "justify-content", "object-fit", "border-bottom", "border-top", "border-left",
-  "border-right", "font-weight", "line-height", "white-space", "scroll-snap-type",
-  "scroll-snap-align", "flex-direction", "flex", "min-width", "max-width",
-  "min-height", "max-height"
-];
+  const cssBlocks = code.split(/}/);
+  const knownCSSProperties = [
+    "color", "background", "font-size", "margin", "padding", "border", "display",
+    "position", "top", "left", "right", "bottom", "width", "height", "overflow",
+    "z-index", "border-radius", "text-align", "box-sizing", "gap", "align-items",
+    "justify-content", "object-fit", "border-bottom", "border-top", "border-left",
+    "border-right", "font-weight", "line-height", "white-space", "scroll-snap-type",
+    "scroll-snap-align", "flex-direction", "flex", "min-width", "max-width",
+    "min-height", "max-height"
+  ];
 
-cssBlocks.forEach((block) => {
-  if (!block.includes("{")) return;
-  const [selector, propertiesRaw] = block.split("{");
-  const selectorIndex = code.indexOf(selector);
-  const { line, col } = getLineAndColumn(code, selectorIndex);
-  const properties = propertiesRaw.trim().split("\n");
+  cssBlocks.forEach((block) => {
+    if (!block.includes("{")) return;
+    const [selector, propertiesRaw] = block.split("{");
+    const selectorIndex = code.indexOf(selector);
+    const { line, col } = getLineAndColumn(code, selectorIndex);
+    const properties = propertiesRaw.trim().split("\n");
 
-  if (!block.includes("}")) {
+    if (!block.includes("}")) {
+      const li = document.createElement("li");
+      li.className = "error";
+      li.textContent = `❌ CSS Bug: Missing closing '}' after selector '${selector.trim()}' at line ${line}, column ${col}`;
+      resultsList.appendChild(li);
+    }
+
+    properties.forEach((lineText) => {
+      const trimmedLine = lineText.trim();
+      if (!trimmedLine) return;
+
+      const lineIndex = code.indexOf(trimmedLine, selectorIndex);
+      const { line: propLine, col: propCol } = getLineAndColumn(code, lineIndex);
+
+      if (!trimmedLine.includes(":")) {
+        const li = document.createElement("li");
+        li.className = "error";
+        li.textContent = `❌ CSS Bug: Missing ':' or malformed property in '${selector.trim()}' → "${trimmedLine}" at line ${propLine}, column ${propCol}`;
+        resultsList.appendChild(li);
+        return;
+      }
+
+      const hasSemicolon = trimmedLine.endsWith(";");
+      const [prop, value] = trimmedLine.replace(";", "").split(":").map(s => s.trim());
+
+      if (!knownCSSProperties.includes(prop)) {
+        const li = document.createElement("li");
+        li.className = "error";
+        li.textContent = `❌ CSS Bug: Unknown property '${prop}' in '${selector.trim()}' at line ${propLine}, column ${propCol}`;
+        resultsList.appendChild(li);
+      }
+
+      if (!hasSemicolon) {
+        const li = document.createElement("li");
+        li.className = "error";
+        li.textContent = `❌ CSS Bug: Missing semicolon after '${prop}: ${value}' in '${selector.trim()}' at line ${propLine}, column ${propCol}`;
+        resultsList.appendChild(li);
+      }
+    });
+  });
+
+  // === Syntax Balance Check ===
+  const stackSyntax = [];
+  const opening = ['{', '(', '['];
+  const closing = ['}', ')', ']'];
+  const map = { '}': '{', ')': '(', ']': '[' };
+
+  for (let i = 0; i < code.length; i++) {
+    const char = code[i];
+    if (opening.includes(char)) {
+      stackSyntax.push({ char, index: i });
+    } else if (closing.includes(char)) {
+      if (stackSyntax.length === 0 || stackSyntax[stackSyntax.length - 1].char !== map[char]) {
+        const { line, col } = getLineAndColumn(code, i);
+        const li = document.createElement("li");
+        li.className = "error";
+        li.textContent = `❌ Syntax Bug: Unexpected '${char}' at line ${line}, column ${col}`;
+        resultsList.appendChild(li);
+        return;
+      } else {
+        stackSyntax.pop();
+      }
+    }
+  }
+
+  if (stackSyntax.length > 0) {
+    stackSyntax.forEach(item => {
+      const { line, col } = getLineAndColumn(code, item.index);
+      const li = document.createElement("li");
+      li.className = "error";
+      li.textContent = `❌ Syntax Bug: Missing closing for '${item.char}' at line ${line}, column ${col}`;
+      resultsList.appendChild(li);
+    });
+  }
+
+  // ✅ Success message
+  if (resultsList.children.length === 0) {
     const li = document.createElement("li");
-    li.className = "error";
-    li.textContent = `❌ CSS Bug: Missing closing '}' after selector '${selector.trim()}' at line ${line}, column ${col}`;
+    li.className = "success";
+    li.textContent = "✅ No HTML or CSS bugs found!";
     resultsList.appendChild(li);
   }
 
-  properties.forEach((lineText) => {
-    const trimmedLine = lineText.trim();
-    if (!trimmedLine) return;
-
-    const lineIndex = code.indexOf(trimmedLine, selectorIndex);
-    const { line: propLine, col: propCol } = getLineAndColumn(code, lineIndex);
-
-    if (!trimmedLine.includes(":")) {
-      const li = document.createElement("li");
-      li.className = "error";
-      li.textContent = `❌ CSS Bug: Missing ':' or malformed property in '${selector.trim()}' → "${trimmedLine}" at line ${propLine}, column ${propCol}`;
-      resultsList.appendChild(li);
-      return;
-    }
-
-    const hasSemicolon = trimmedLine.endsWith(";");
-    const [prop, value] = trimmedLine.replace(";", "").split(":").map(s => s.trim());
-
-    if (!knownCSSProperties.includes(prop)) {
-      const li = document.createElement("li");
-      li.className = "error";
-      li.textContent = `❌ CSS Bug: Unknown property '${prop}' in '${selector.trim()}' at line ${propLine}, column ${propCol}`;
-      resultsList.appendChild(li);
-    }
-
-    if (!hasSemicolon) {
-      const li = document.createElement("li");
-      li.className = "error";
-      li.textContent = `❌ CSS Bug: Missing semicolon after '${prop}: ${value}' in '${selector.trim()}' at line ${propLine}, column ${propCol}`;
-      resultsList.appendChild(li);
-    }
-  });
-});
-
-// === Syntax Balance Check ===
-const stackSyntax = [];
-const opening = ['{', '(', '['];
-const closing = ['}', ')', ']'];
-const map = { '}': '{', ')': '(', ']': '[' };
-
-for (let i = 0; i < code.length; i++) {
-  const char = code[i];
-  if (opening.includes(char)) {
-    stackSyntax.push({ char, index: i });
-  } else if (closing.includes(char)) {
-    if (stackSyntax.length === 0 || stackSyntax[stackSyntax.length - 1].char !== map[char]) {
-      const { line, col } = getLineAndColumn(code, i);
-      const li = document.createElement("li");
-      li.className = "error";
-      li.textContent = `❌ Syntax Bug: Unexpected '${char}' at line ${line}, column ${col}`;
-      resultsList.appendChild(li);
-      return;
-    } else {
-      stackSyntax.pop();
-    }
-  }
-}
-
-if (stackSyntax.length > 0) {
-  stackSyntax.forEach(item => {
-    const { line, col } = getLineAndColumn(code, item.index);
-    const li = document.createElement("li");
-    li.className = "error";
-    li.textContent = `❌ Syntax Bug: Missing closing for '${item.char}' at line ${line}, column ${col}`;
-    resultsList.appendChild(li);
-  });
-}
-
-// ✅ Success message
-if (resultsList.children.length === 0) {
-  const li = document.createElement("li");
-  li.className = "success";
-  li.textContent = "✅ No HTML or CSS bugs found!";
-  resultsList.appendChild(li);
+  // Call highlight function
+  highlightLinesWithErrors(errorLines);
 }
 
 // 🔁 Button click listener
@@ -252,7 +249,7 @@ function highlightLinesWithErrors(lines) {
   highlight.innerHTML = html;
 }
 
-// Sync scroll between textarea and highlight layer
+// Sync scroll between textarea and highlight
 document.addEventListener("DOMContentLoaded", () => {
   const textarea = document.getElementById("codeInput");
   const highlight = document.getElementById("codeHighlight");
