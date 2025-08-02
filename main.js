@@ -1,4 +1,6 @@
-﻿function runLinter() {
+console.log("✅ JS file connected");
+
+function runLinter() {
   const code = document.getElementById("codeInput").value;
   const resultsList = document.getElementById("resultsList");
   resultsList.innerHTML = "";
@@ -218,4 +220,5 @@
     li.textContent = "✅ No HTML or CSS bugs found!";
     resultsList.appendChild(li);
   }
+
 }
