@@ -122,6 +122,7 @@ function runLinter() {
 
   highlightLinesWithErrors(errorLines);
 
+
 // === CSS Validation ===
   const cssBlocks = code.split(/}/);
   const knownCSSProperties = [
