@@ -4,227 +4,26 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>🧠 Pro Linter Room</title>
-  <style>
-    /* === Global Reset === */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    /* === Body Styling === */
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #1e1e1e;
-      color: #d4d4d4;
-      padding: 20px;
-      line-height: 1.5;
-    }
-
-    header {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    header h1 {
-      font-size: 28px;
-      color: #61dafb;
-    }
-
-    header p {
-      color: #c5c5c5;
-    }
-
-    footer {
-      margin-top: 20px;
-      text-align: center;
-      color: #888;
-      font-size: 14px;
-    }
-
-    /* === Workspace Layout === */
-    .workspace {
-      display: flex;
-      flex-direction: row;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-
-    /* === Editor Panel === */
-    .editor {
-      flex: 1 1 50%;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .editor label {
-      margin-bottom: 8px;
-      font-weight: bold;
-    }
-
-    textarea#codeInput {
-      background-color: #252526;
-      color: #dcdcdc;
-      border: 1px solid #3c3c3c;
-      border-radius: 5px;
-      padding: 10px;
-      font-family: 'Fira Code', monospace;
-      font-size: 14px;
-      height: 400px;
-      resize: vertical;
-    }
-
-    /* === Button === */
-    #checkBtn {
-      margin-top: 12px;
-      padding: 10px 16px;
-      background-color: #0e639c;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s;
-      align-self: flex-start;
-    }
-
-    #checkBtn:hover {
-      background-color: #1177bb;
-    }
-
-    /* === Results Panel === */
-    .results {
-      flex: 1 1 50%;
-      background-color: #252526;
-      border: 1px solid #3c3c3c;
-      border-radius: 5px;
-      padding: 16px;
-      min-height: 400px;
-      overflow-y: auto;
-    }
-
-    .results h2 {
-      margin-bottom: 10px;
-      color: #c586c0;
-    }
-
-    /* === List Styling === */
-    ul#resultsList {
-      list-style: none;
-      padding-left: 0;
-    }
-
-    li {
-      font-family: 'Fira Code', monospace;
-      margin-bottom: 6px;
-    }
-
-    li.error {
-      color: #f44747;
-    }
-
-    li.success {
-      color: #89ca78;
-    }
-
-    /* === Optional Light Mode Support === */
-    body.light-mode {
-      background-color: #ffffff;
-      color: #333;
-    }
-
-    body.light-mode textarea#codeInput,
-    body.light-mode .results {
-      background-color: #f4f4f4;
-      color: #222;
-      border-color: #ccc;
-    }
-
-    body.light-mode #checkBtn {
-      background-color: #007acc;
-    }
-
-    body.light-mode #checkBtn:hover {
-      background-color: #0099ff;
-    }
-
-    body.light-mode .results h2 {
-      color: #007acc;
-    }
-
-    .editor-panel {
-      flex: 1 1 50%;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .code-wrapper {
-      position: relative;
-      width: 100%;
-    }
-
-    #codeInput, #codeHighlight {
-      font-family: 'Fira Code', monospace;
-      font-size: 14px;
-      line-height: 1.5;
-      white-space: pre-wrap;
-      padding: 10px;
-      border-radius: 5px;
-      width: 100%;
-      height: 400px;
-      background-color: #252526;
-      color: #dcdcdc;
-      border: 1px solid #3c3c3c;
-      overflow: auto;
-    }
-
-    #codeInput {
-      position: absolute;
-      top: 0;
-      left: 0;
-      background: transparent;
-      color: transparent;
-      caret-color: white;
-      z-index: 2;
-      resize: none;
-    }
-
-    #codeHighlight {
-      position: relative;
-      z-index: 1;
-      pointer-events: none;
-      color: #dcdcdc;
-    }
-
-    /* Highlighted lines */
-    .highlight-line {
-      display: block;
-      width: 100%;
-      background-color: rgba(255, 0, 0, 0.1);
-      border-left: 3px solid red;
-      padding-left: 4px;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
   <header>
-    <h1>🧠 Code Linter Room</h1>
-    <p>Smart HTML + CSS Bug Detection</p>
+    <h1>🧠 Code Linter + AutoFix</h1>
+    <p>Smart HTML + CSS Bug Detection & Auto-Fix</p>
   </header>
 
   <main class="workspace">
     <section class="editor-panel">
       <label for="codeInput">Paste Your HTML/CSS Code</label>
-
       <div class="code-wrapper">
-        <pre id="codeHighlight"></pre>
-        <textarea id="codeInput" placeholder="<!DOCTYPE html>
-<html>
-  <head>..."></textarea>
+        <div id="codeHighlight"></div>
+        <textarea id="codeInput" placeholder="Paste your code here..."></textarea>
       </div>
-
-      <button id="checkBtn">🔍 Check for Bugs</button>
+      <div class="buttons">
+        <button id="checkBtn">🔍 Check for Bugs</button>
+        <button id="fixBtn">🛠 Auto-Fix Code</button>
+        <button id="copyBtn">📋 Copy Fixed Code</button>
+      </div>
     </section>
 
     <section class="results">
@@ -234,10 +33,9 @@
   </main>
 
   <footer>
-    <p>🛠 Built by Humayun danish</p>
+    <p>🛠 Built by Humayun Danish</p>
   </footer>
 
   <script src="main.js"></script>
 </body>
 </html>
-
